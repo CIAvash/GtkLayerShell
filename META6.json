@@ -1,0 +1,18 @@
+{
+    "perl": "6.d",
+    "name": "GtkLayerShell",
+    "description": "Library and Native bindings for Gtk Layer Shell, a library for creating panels and other desktop components for Wayland, using the Layer Shell protocol.",
+    "authors": ["Siavash Askari Nasr"],
+    "auth": "zef:CIAvash",
+    "version": "0.1.0",
+    "api": "0.6",
+    "tags": ["GtkLayerShell", "Gtk", "NativeCall", "Native", "Layer Shell", "GTK Layer Shell", "Wayland", "wlr", "GUI", "wlroots"],
+    "license": "LGPL-3.0-or-later",
+    "source-url": "https://github.com/CIAvash/GtkLayerShell.git",
+    "provides": {
+        "GtkLayerShell": "lib/GtkLayerShell.rakumod",
+        "GtkLayerShell::Native": "lib/GtkLayerShell/Native.rakumod"
+    },
+    "depends":      ["NativeLibs:auth<github:salortiz>:ver<0.0.9+>"],
+    "test-depends": ["NativeLibs:auth<github:salortiz>:ver<0.0.9+>"]
+}

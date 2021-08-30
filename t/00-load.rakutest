@@ -1,0 +1,10 @@
+use v6.d;
+
+use Test;
+
+plan 2;
+
+BEGIN {
+    use-ok 'GtkLayerShell::Native:auth<zef:CIAvash>';
+    use-ok 'GtkLayerShell:auth<zef:CIAvash>';
+}

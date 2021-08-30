@@ -1,0 +1,70 @@
+use v6.d;
+
+use Test;
+
+use lib $?FILE.IO.parent.add: 'lib';
+use GtkNative;
+INIT plan :skip-all(.exception.message) without $Native_Lib;
+
+plan 29;
+
+use GtkLayerShell::Native:auth<zef:CIAvash>;
+
+isa-ok |$_ for
+    (GTK_LAYER_SHELL_LAYER_BACKGROUND,        GtkLayerShellLayer),
+    (GTK_LAYER_SHELL_LAYER_OVERLAY,           GtkLayerShellLayer),
+    (GTK_LAYER_SHELL_LAYER_BOTTOM,            GtkLayerShellLayer),
+    (GTK_LAYER_SHELL_LAYER_TOP,               GtkLayerShellLayer),
+    (GTK_LAYER_SHELL_EDGE_RIGHT,              GtkLayerShellEdge),
+    (GTK_LAYER_SHELL_EDGE_LEFT,               GtkLayerShellEdge),
+    (GTK_LAYER_SHELL_EDGE_TOP,                GtkLayerShellEdge),
+    (GTK_LAYER_SHELL_EDGE_BOTTOM,             GtkLayerShellEdge),
+    (GTK_LAYER_SHELL_KEYBOARD_MODE_NONE,      GtkLayerShellKeyboardMode),
+    (GTK_LAYER_SHELL_KEYBOARD_MODE_EXCLUSIVE, GtkLayerShellKeyboardMode),
+    (GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND, GtkLayerShellKeyboardMode),
+    (gtk_layer_get_major_version,    Int:D, 'Major version is an Int'),
+    (gtk_layer_get_minor_version,    Int:D, 'Minor version is an Int'),
+    (gtk_layer_get_micro_version,    Int:D, 'Micro version is an Int'),
+    (gtk_layer_is_supported,         Int:D, 'gtk_layer_is_supported returns an Int (Bool)'),
+    (gtk_layer_get_protocol_version, Int:D, 'gtk_layer_get_protocol_version returns an Int');
+
+my $top_level_window = gtk_window_new 0;
+END .&gtk_widget_destroy with $top_level_window;
+
+nok gtk_layer_is_layer_window($top_level_window), 'Window is not a layer surface';
+
+gtk_layer_init_for_window $top_level_window;
+
+ok gtk_layer_is_layer_window($top_level_window), 'Window is a layer surface';
+
+isa-ok gtk_layer_get_zwlr_layer_surface_v1($top_level_window), ZwlrLayerSurfaceV1;
+
+gtk_layer_set_namespace $top_level_window, 'panel';
+is gtk_layer_get_namespace($top_level_window), 'panel', 'Namespace is set correctly';
+
+my &set_anchor = { gtk_layer_set_anchor $top_level_window, $^a, $^b };
+set_anchor GTK_LAYER_SHELL_EDGE_LEFT,   True;
+set_anchor GTK_LAYER_SHELL_EDGE_BOTTOM, True;
+
+my &get_anchor = { gtk_layer_get_anchor $top_level_window, $^a };
+nok |$_ for
+    (get_anchor(GTK_LAYER_SHELL_EDGE_TOP),    'Top    edge anchor should be False'),
+    (get_anchor(GTK_LAYER_SHELL_EDGE_RIGHT),  'Right  edge anchor should be False');
+ok |$_ for
+    (get_anchor(GTK_LAYER_SHELL_EDGE_LEFT),   'Left   edge anchor should be True'),
+    (get_anchor(GTK_LAYER_SHELL_EDGE_BOTTOM), 'Bottom edge anchor should be True');
+
+gtk_layer_set_layer $top_level_window, GTK_LAYER_SHELL_LAYER_OVERLAY;
+cmp-ok gtk_layer_get_layer($top_level_window), &[~~], GTK_LAYER_SHELL_LAYER_OVERLAY, 'Layer should be Overlay';
+
+gtk_layer_set_margin $top_level_window, GTK_LAYER_SHELL_EDGE_TOP, 10;
+is gtk_layer_get_margin($top_level_window, GTK_LAYER_SHELL_EDGE_TOP), 10, 'Edge margin is set correctly';
+
+gtk_layer_set_exclusive_zone $top_level_window, 5;
+is gtk_layer_get_exclusive_zone($top_level_window), 5, 'Exclusive zone is set correctly';
+
+nok gtk_layer_auto_exclusive_zone_is_enabled($top_level_window), 'Auto exclusive zone is not enabled';
+
+gtk_layer_set_keyboard_mode $top_level_window, GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND;
+cmp-ok gtk_layer_get_keyboard_mode($top_level_window), &[~~], GTK_LAYER_SHELL_KEYBOARD_MODE_ON_DEMAND,
+       'Keyboard mode is on demand';

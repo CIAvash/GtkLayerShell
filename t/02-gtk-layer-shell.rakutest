@@ -1,0 +1,153 @@
+use v6.d;
+
+use Test;
+
+use lib $?FILE.IO.parent.add: 'lib';
+use GtkNative;
+INIT plan :skip-all(.exception.message) without $Native_Lib;
+
+plan 4;
+
+use GtkLayerShell:auth<zef:CIAvash>;
+
+subtest 'Using GtkLayerShell types and class methods', {
+    plan 16;
+
+    isa-ok |$_ for
+        (LAYER_BACKGROUND,        LayerShellLayer),
+        (LAYER_OVERLAY,           LayerShellLayer),
+        (LAYER_BOTTOM,            LayerShellLayer),
+        (LAYER_TOP,               LayerShellLayer),
+        (EDGE_RIGHT,              LayerShellEdge),
+        (EDGE_LEFT,               LayerShellEdge),
+        (EDGE_TOP,                LayerShellEdge),
+        (EDGE_BOTTOM,             LayerShellEdge),
+        (KEYBOARD_MODE_NONE,      LayerShellKeyboardMode),
+        (KEYBOARD_MODE_EXCLUSIVE, LayerShellKeyboardMode),
+        (KEYBOARD_MODE_ON_DEMAND, LayerShellKeyboardMode),
+        (GtkLayerShell.major_version, Int:D, 'Major version is an Int'),
+        (GtkLayerShell.minor_version, Int:D, 'Minor version is an Int'),
+        (GtkLayerShell.micro_version, Int:D, 'Micro version is an Int'),
+        (GtkLayerShell.is_supported, Bool:D, 'GtkLayerShell.is_supported returns a Bool'),
+        (GtkLayerShell.protocol_version, Int:D, 'GtkLayerShell.get_protocol_version returns an Int');
+}
+
+subtest 'Using GtkLayerShell object methods', {
+    plan 13;
+
+    my $top_level_window = gtk_window_new 0;
+    LEAVE .&gtk_widget_destroy with $top_level_window;
+
+    my GtkLayerShell $gtk_layer_shell .= new: :window($top_level_window);
+
+    nok $gtk_layer_shell.is_layer_window, 'Window is not a layer surface';
+
+    $gtk_layer_shell.init;
+    ok $gtk_layer_shell.is_layer_window, 'Window is a layer surface';
+
+    isa-ok $gtk_layer_shell.zwlr_layer_surface_v1, ZwlrLayerSurfaceV1;
+
+    $gtk_layer_shell.set_namespace: 'panel';
+    is $gtk_layer_shell.get_namespace, 'panel', 'Namespace is set correctly';
+
+    my &set_anchor = { $gtk_layer_shell.set_anchor: $^a, $^b };
+    set_anchor EDGE_LEFT,   True;
+    set_anchor EDGE_BOTTOM, True;
+
+    my &get_anchor = { $gtk_layer_shell.get_anchor: $^a };
+    nok |$_ for
+        (get_anchor(EDGE_TOP),    'Top    edge anchor should be False'),
+        (get_anchor(EDGE_RIGHT),  'Right  edge anchor should be False');
+    ok |$_ for
+        (get_anchor(EDGE_LEFT),   'Left   edge anchor should be True'),
+        (get_anchor(EDGE_BOTTOM), 'Bottom edge anchor should be True');
+
+    $gtk_layer_shell.set_layer: LAYER_OVERLAY;
+    cmp-ok $gtk_layer_shell.get_layer, &[~~], LAYER_OVERLAY, 'Layer should be Overlay';
+
+    $gtk_layer_shell.set_margin: EDGE_TOP, 10;
+    $gtk_layer_shell.set_exclusive_zone: 5;
+    is |$_ for
+        ($gtk_layer_shell.get_margin(EDGE_TOP), 10, 'Edge margin is set correctly'),
+        ($gtk_layer_shell.get_exclusive_zone, 5, 'Exclusive zone is set correctly');
+
+    nok $gtk_layer_shell.is_auto_exclusive_zone_enabled, 'Auto exclusive zone is not enabled';
+
+    $gtk_layer_shell.set_keyboard_mode: KEYBOARD_MODE_ON_DEMAND;
+    cmp-ok $gtk_layer_shell.get_keyboard_mode, &[~~], KEYBOARD_MODE_ON_DEMAND,
+           'Keyboard mode is set to on demand';
+}
+
+subtest 'Init layer when instantiating GtkLayerShell', {
+    plan 2;
+
+    my $top_level_window = gtk_window_new 0;
+    LEAVE .&gtk_widget_destroy with $top_level_window;
+
+    my GtkLayerShell $gtk_layer_shell .= new: :window($top_level_window), :init, :auto_exclusive_zone;
+
+    ok |$_ for
+        ($gtk_layer_shell.is_layer_window, 'Window is a layer surface'),
+        ($gtk_layer_shell.is_auto_exclusive_zone_enabled, 'Auto exclusive zone is enabled');
+}
+
+subtest 'Set multiple values while instantiating GtkLayerShell', {
+    plan 12;
+
+    my $top_level_window = gtk_window_new 0;
+    LEAVE .&gtk_widget_destroy with $top_level_window;
+
+    my GtkLayerShell $gtk_layer_shell .= new: :window($top_level_window), :init,
+                                              :layer(LAYER_BOTTOM), :anchors(:EDGE_LEFT, :EDGE_TOP),
+                                              :margins(:EDGE_TOP(55), :EDGE_LEFT(100)), :exclusive_zone(50),
+                                              :name_space<dock>, :keyboard_mode(KEYBOARD_MODE_NONE);
+
+    ok $gtk_layer_shell.is_layer_window, 'Window is a layer surface';
+
+    my &get_anchor = { $gtk_layer_shell.get_anchor: $^a };
+    nok |$_ for
+        (get_anchor(EDGE_BOTTOM), 'Bottom edge anchor should be False'),
+        (get_anchor(EDGE_RIGHT),  'Right  edge anchor should be False');
+    ok |$_ for
+        (get_anchor(EDGE_LEFT),   'Left   edge anchor should be True'),
+        (get_anchor(EDGE_TOP),    'Top    edge anchor should be True');
+
+    cmp-ok $gtk_layer_shell.get_layer, &[~~], LAYER_BOTTOM, 'Layer should be Bottom';
+
+    is |$_ for
+        ($gtk_layer_shell.get_margin(EDGE_TOP),   55, 'Top   edge margin is set correctly'),
+        ($gtk_layer_shell.get_margin(EDGE_LEFT), 100, 'Left  edge margin is set correctly'),
+        ($gtk_layer_shell.get_exclusive_zone,     50, 'Exclusive zone is set correctly');
+
+    nok $gtk_layer_shell.is_auto_exclusive_zone_enabled, 'Auto exclusive zone is not enabled';
+
+    cmp-ok $gtk_layer_shell.get_keyboard_mode, &[~~], KEYBOARD_MODE_NONE, 'Keyboard mode is set to none';
+
+    subtest 'Set multiple values with set method', {
+        plan 10;
+
+        $gtk_layer_shell.set: :layer(LAYER_BACKGROUND),
+                              :anchors(:EDGE_RIGHT, :EDGE_BOTTOM, :!EDGE_LEFT, :!EDGE_TOP),
+                              :margins(:EDGE_RIGHT(100), :EDGE_BOTTOM(60)), :exclusive_zone(30),
+                              :name_space<panel>, :keyboard_mode(KEYBOARD_MODE_ON_DEMAND);
+
+        nok |$_ for
+            (get_anchor(EDGE_LEFT),   'Left   edge anchor should be False'),
+            (get_anchor(EDGE_TOP),    'Top    edge anchor should be False');
+        ok |$_ for
+            (get_anchor(EDGE_BOTTOM), 'Bottom edge anchor should be True'),
+            (get_anchor(EDGE_RIGHT),  'Right  edge anchor should be True');
+
+        cmp-ok $gtk_layer_shell.get_layer, &[~~], LAYER_BACKGROUND, 'Layer should be Background';
+
+        is |$_ for
+            ($gtk_layer_shell.get_margin(EDGE_BOTTOM), 60,  'Bottom edge margin is set correctly'),
+            ($gtk_layer_shell.get_margin(EDGE_RIGHT),  100, 'Right  edge margin is set correctly'),
+            ($gtk_layer_shell.get_exclusive_zone,      30,  'Exclusive zone is set correctly');
+
+        nok $gtk_layer_shell.is_auto_exclusive_zone_enabled, 'Auto exclusive zone is not enabled';
+
+        cmp-ok $gtk_layer_shell.get_keyboard_mode, &[~~], KEYBOARD_MODE_ON_DEMAND,
+                   'Keyboard mode is set to on demand';
+    }
+}
