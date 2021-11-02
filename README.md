@@ -97,7 +97,7 @@ ATTRIBUTES
 
 ## has GtkLayerShell::DefinedWindow $.window
 
-A layer surface
+A layer surface. `Pointer` to `Gtk.Window`.
 
 ## has Bool:D $.init
 
@@ -183,7 +183,7 @@ The namespace of this layer surface
 
 #### GtkLayerShell::Native::Monitor :$monitor
 
-The output this layer surface will be placed on (`Any` to let the compositor decide)
+The output(`Pointer` to `Gdk.Monitor`) this layer surface will be placed on (`Any` to let the compositor decide)
 
 #### :@anchors where .all ~~ Anchor
 
@@ -287,7 +287,7 @@ Default behavior is to let the compositor choose
 
 #### GtkLayerShell::Native::Monitor:D $monitor
 
-The output this layer surface will be placed on
+The output(`Pointer` to `Gdk.Monitor`) this layer surface will be placed on
 
 ## method get_monitor
 
@@ -295,7 +295,7 @@ The output this layer surface will be placed on
 method get_monitor() returns GtkLayerShell::Native::Monitor
 ```
 
-Returns the monitor this surface will/has requested to be on, can be `Pointer` type object
+Returns the monitor(`Pointer` to `Gdk.Monitor`) this surface will/has requested to be on, can be `Pointer` type object.
 
 NOTE: To get which monitor the surface is actually on, use `gdk_get_monitor_at_window` from a Gdk module.
 

@@ -124,7 +124,7 @@ unit class GtkLayerShell:auth($?DISTRIBUTION.meta<auth>):ver($?DISTRIBUTION.meta
 
 subset DefinedWindow of Mu where { .defined or note 'window must be a defined Pointer' and False }
 
-#| A layer surface
+#| A layer surface. C<Pointer> to C<Gtk.Window>.
 has DefinedWindow $.window is repr<CPointer> is required;
 
 #| Whether to initialize layer for C<window> on instantiation
@@ -178,7 +178,7 @@ subset Margin of Pair where -> (:$key, :$value) { LayerShellEdge::«$key».defin
 method set (
     LayerShellLayer :$layer,      #= The C<LayerShellLayer> on which this surface appears
     Str             :$name_space, #= The namespace of this layer surface
-    #| The output this layer surface will be placed on (C<Any> to let the compositor decide)
+    #| The output(C<Pointer> to C<Gdk.Monitor>) this layer surface will be placed on (C<Any> to let the compositor decide).
     Monitor :$monitor,
     #| Pairs of C<LayerShellEdge>, C<Int> to set margins of this layer suface's edges
     :@anchors where .all ~~ Anchor,
@@ -237,11 +237,11 @@ method get_layer returns LayerShellLayer:D {
 #| Sets the output for the window to be placed on, or C<Pointer> type object to let the compositor choose.
 #| If the window is currently mapped, it will get remapped so the change can take effect.
 #| Default behavior is to let the compositor choose
-method set_monitor (Monitor $monitor #=[ The output this layer surface will be placed on ]) {
+method set_monitor (Monitor $monitor #=[ The output(C<Pointer> to C<Gdk.Monitor>) this layer surface will be placed on. ]) {
     gtk_layer_set_monitor $!window, $monitor;
 }
 
-#| Returns the monitor this surface will/has requested to be on, can be C<Pointer> type object
+#| Returns the monitor(C<Pointer> to C<Gdk.Monitor>) this surface will/has requested to be on, can be C<Pointer> type object.
 #| NOTE: To get which monitor the surface is actually on, use C<gdk_get_monitor_at_window> from a Gdk module.
 method get_monitor returns Monitor {
     gtk_layer_get_monitor $!window;
