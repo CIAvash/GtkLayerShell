@@ -27,7 +27,7 @@ a library for creating panels and other desktop components for Wayland, using th
 
 =begin code :lang<raku>
 
-use GtkLayerShell:auth<zef:CIAvash>:api<0.6>;
+use GtkLayerShell:auth<zef:CIAvash>:api<0.7>;
 
 # With C<Gnome::Gtk3> module
 use Gnome::Gtk3::Main;
@@ -94,7 +94,7 @@ You need to have L<Gtk Layer Shell|https://github.com/wmww/gtk-layer-shell> and 
 
 =begin code :lang<console>
 
-zef install "GtkLayerShell:auth<zef:CIAvash>:api<0.6>"
+zef install "GtkLayerShell:auth<zef:CIAvash>:api<0.7>"
 
 =end code
 

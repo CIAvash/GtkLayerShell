@@ -12,7 +12,7 @@ SYNOPSIS
 ========
 
 ```raku
-use GtkLayerShell:auth<zef:CIAvash>:api<0.6>;
+use GtkLayerShell:auth<zef:CIAvash>:api<0.7>;
 
 # With Gnome::Gtk3 module
 use Gnome::Gtk3::Main;
@@ -76,7 +76,7 @@ INSTALLATION
 You need to have [Gtk Layer Shell](https://github.com/wmww/gtk-layer-shell) and a Wayland compositor that works with it, [Raku](https://www.raku-lang.ir/en) and [zef](https://github.com/ugexe/zef), then run:
 
 ```console
-zef install "GtkLayerShell:auth<zef:CIAvash>:api<0.6>"
+zef install "GtkLayerShell:auth<zef:CIAvash>:api<0.7>"
 ```
 
 or if you have've cloned the repo:

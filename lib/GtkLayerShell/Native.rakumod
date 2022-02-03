@@ -10,7 +10,7 @@ a library for creating panels and other desktop components for Wayland, using th
 
 =begin code :lang<raku>
 
-use GtkLayerShell::Native:auth<zef:CIAvash>:api<0.6>;
+use GtkLayerShell::Native:auth<zef:CIAvash>:api<0.7>;
 
 # $window must be a native object
 gtk_layer_init_for_window $window;
